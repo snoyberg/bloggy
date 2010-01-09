@@ -7,10 +7,13 @@ import Yesod.Helpers.AtomFeed
 import Hack.Handler.SimpleServer
 import Data.Object.Yaml
 import Data.Object.Text
+import Data.Object.String
+import Data.Attempt
 import Types
 import Web.Encodings
 import Data.Time
 import System.Locale
+import Control.Monad
 
 data Entry = Entry
     { entryTitle :: String
@@ -29,9 +32,19 @@ instance ConvertSuccess Entry HtmlObject where
 data Bloggy = Bloggy
     { blogTitle :: String
     , blogSubtitle :: String
+    , blogApproot :: String
     }
 loadBloggy :: IO Bloggy
-loadBloggy = return $ Bloggy "FIXME BLOG TITLE" "FIXME BLOG SUBTITLE"
+loadBloggy = readYamlDoc "settings.yaml" >>= convertAttemptWrap
+instance ConvertAttempt YamlDoc Bloggy where
+    convertAttempt = helper <=< ca where
+        helper :: StringObject -> Attempt Bloggy
+        helper so = do
+            m <- fromMapping so
+            t <- lookupObject "title" m
+            s <- lookupObject "subtitle" m
+            a <- lookupObject "approot" m
+            return $ Bloggy t s a
 
 instance Yesod Bloggy where
     handlers = [$resources|
@@ -45,7 +58,7 @@ instance Yesod Bloggy where
 |]
     templateDir _ = "templates"
 instance YesodApproot Bloggy where
-    approot _ = Approot "http://localhost:3000/" -- FIXME
+    approot = Approot . blogApproot
 
 serveStatic' :: Verb -> [String] -> Handler y [(ContentType, Content)]
 serveStatic' = serveStatic $ fileLookupDir "static"
