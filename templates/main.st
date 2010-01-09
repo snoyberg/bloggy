@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>$entry.title$ :: $bloggy.title$</title>
-    <link rel="stylesheet" href="$bloggy.approot$static/style.css">
+    <link rel="stylesheet" href="$bloggy.static$style.css">
     <!--[if IE]>
       <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -17,7 +17,7 @@
         var discus_url = "$bloggy.approot$entry/$entry.slug$/";
 var disqus_developer = 1;
     </script>
-    <script src="$bloggy.approot$static/script.js"></script>
+    <script src="$bloggy.static$script.js"></script>
   </head>
   <body>
     <section id="wrapper">

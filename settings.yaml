@@ -1,3 +1,6 @@
 approot: http://localhost:3000/
 title: Snoyblog
 subtitle: Michael Snoyman's programming thoughts
+#static: http://localhost:3000/static/
+#static: http://static.snoyman.com/bloggy/
+static: http://www.snoyman.com/static/

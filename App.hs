@@ -36,6 +36,7 @@ data Bloggy = Bloggy
     { blogTitle :: String
     , blogSubtitle :: String
     , blogApproot :: String
+    , blogStatic :: String
     }
 loadBloggy :: IO Bloggy
 loadBloggy = readYamlDoc "settings.yaml" >>= convertAttemptWrap
@@ -47,7 +48,8 @@ instance ConvertAttempt YamlDoc Bloggy where
             t <- lookupObject "title" m
             s <- lookupObject "subtitle" m
             a <- lookupObject "approot" m
-            return $ Bloggy t s a
+            st <- lookupObject "static" m
+            return $ Bloggy t s a st
 
 instance Yesod Bloggy where
     handlers = [$resources|
@@ -85,6 +87,7 @@ instance ConvertSuccess Bloggy HtmlObject where
         [ ("approot", unApproot $ approot b)
         , ("title", blogTitle b)
         , ("subtitle", blogSubtitle b)
+        , ("static", blogStatic b)
         ]
 
 --readEntry :: MonadIO m => String -> m Entry
