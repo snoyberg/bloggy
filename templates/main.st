@@ -2,17 +2,18 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>$entry.title$ :: Snoyblog</title>
-    <link rel="stylesheet" href="$approot$static/style.css">
+    <title>$entry.title$ :: $bloggy.title$</title>
+    <link rel="stylesheet" href="$bloggy.approot$static/style.css">
     <!--[if IE]>
       <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <link rel="alternate" type="application/atom+xml" href="$bloggy.approot$feed/">
   </head>
   <body>
     <section id="wrapper">
       <header>
-        <h1>Michael Snoyman's Programming Thoughts</h1>
-        <h2>Web development and Haskell, mostly</h2>
+        <h1>$bloggy.title$</h1>
+        <h2>$bloggy.subtitle$</h2>
       </header>
       <nav>
         <h3>Blogroll</h3>

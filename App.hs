@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 import Yesod
 import Yesod.Helpers.Static
+import Yesod.Helpers.AtomFeed
 import Hack.Handler.SimpleServer
 import Data.Object.Yaml
 import Data.Object.Text
@@ -11,17 +12,26 @@ import Web.Encodings
 import Data.Time
 import System.Locale
 
-data Entry = Entry Text Text Day
+data Entry = Entry
+    { entryTitle :: String
+    , entryContent :: Html
+    , entrySlug :: String
+    , entryDay :: Day
+    }
 instance ConvertSuccess Entry HtmlObject where
-    convertSuccess (Entry t c d) = cs
-        [ ("title", Text t)
-        , ("content", Html c)
-        , ("date", cs $ formatTime defaultTimeLocale "%b %e, %Y" d)
+    convertSuccess e = cs
+        [ ("title", cs $ entryTitle e)
+        , ("content", entryContent e)
+        , ("date", cs $ formatTime defaultTimeLocale "%b %e, %Y"
+                      $ entryDay e)
         ]
 
 data Bloggy = Bloggy
+    { blogTitle :: String
+    , blogSubtitle :: String
+    }
 loadBloggy :: IO Bloggy
-loadBloggy = return Bloggy
+loadBloggy = return $ Bloggy "FIXME BLOG TITLE" "FIXME BLOG SUBTITLE"
 
 instance Yesod Bloggy where
     handlers = [$resources|
@@ -29,6 +39,8 @@ instance Yesod Bloggy where
     Get: mostRecentEntryH
 /entry/$entry:
     Get: showEntryH
+/feed:
+    Get: showFeedH
 /static/*filepath: serveStatic'
 |]
     templateDir _ = "templates"
@@ -48,13 +60,19 @@ loadArchive = readYamlDoc archiveFile >>= convertAttemptWrap
 showEntry :: Entry -> Handler Bloggy Template
 showEntry e = do
     y <- getYesod
-    let (Approot ar) = approot y
     template "main" "entry" (cs e) $ do
         archive <- loadArchive
         return
-            [ ("approot", cs ar)
+            [ ("bloggy", cs y)
             , ("archive", cs (slugToUrl y, archive))
             ]
+
+instance ConvertSuccess Bloggy HtmlObject where
+    convertSuccess b = cs
+        [ ("approot", unApproot $ approot b)
+        , ("title", blogTitle b)
+        , ("subtitle", blogSubtitle b)
+        ]
 
 --readEntry :: MonadIO m => String -> m Entry
 readEntry s = do
@@ -62,7 +80,7 @@ readEntry s = do
     let (t:d':rest) = lines contents
     let content = unlines rest
     d <- convertAttemptWrap d'
-    return $ Entry (cs t) (cs content) d
+    return $ Entry (cs t) (Html $ cs content) s d
 
 showEntryH :: String -> Handler Bloggy Template
 showEntryH eSlug = readEntry eSlug >>= showEntry
@@ -70,6 +88,28 @@ showEntryH eSlug = readEntry eSlug >>= showEntry
 mostRecentEntryH = do
     ((_, (ei:_)):_) <- liftIO loadArchive
     showEntryH $ slug ei
+
+showFeedH = do
+    archive <- liftIO loadArchive
+    let slugs = take 10 $ map slug $ concatMap snd archive
+    entries@(firstEntry:_) <- liftIO $ mapM readEntry slugs
+    y <- getYesod
+    atomFeed $ AtomFeed
+        (blogTitle y)
+        (RelLoc "feed/")
+        (RelLoc "")
+        (cs $ entryDay firstEntry)
+        (map cs entries)
+
+instance ConvertSuccess Entry AtomFeedEntry where
+    convertSuccess e = AtomFeedEntry
+        (RelLoc $ "entry/" ++ encodeUrl (entrySlug e) ++ "/")
+        (cs $ entryDay e)
+        (cs $ entryTitle e)
+        (entryContent e)
+
+instance ConvertSuccess Day UTCTime where
+    convertSuccess d = UTCTime d $ secondsToDiffTime 0
 
 main :: IO ()
 main = putStrLn "Running..." >> loadBloggy >>= run 3000 . toHackApp
