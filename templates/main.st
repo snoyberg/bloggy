@@ -10,7 +10,10 @@
     <link rel="alternate" type="application/atom+xml" href="$bloggy.approot$feed/">
     <script src="http://cdn.jquerytools.org/1.1.2/full/jquery.tools.min.js"></script>
     <script>
+        var blogTitle = "$bloggy.title$";
+        var approot = "$bloggy.approot$";
         var initialMonth = "$entry.month$";
+        var currentSlug = "$entry.slug$";
     </script>
     <script src="$bloggy.approot$static/script.js"></script>
   </head>
@@ -43,7 +46,9 @@
       <article>
         <h1 id="article-title">$entry.title$</h1>
         <h2 id="article-date">$entry.date$</h2>
-        $entry.content$
+        <section id="content">
+          $entry.content$
+        </section>
       </article>
       <footer>
         Powered by <a href="http://www.yesodweb.com/code.html">Yesod Web Framework</a>

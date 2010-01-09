@@ -88,6 +88,12 @@ nav a:hover {
 
 #archives a {
     display: block;
+    text-decoration: none;
+}
+
+#archives a.current {
+    color: #000;
+    cursor: default;
 }
 
 article {

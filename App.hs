@@ -29,6 +29,7 @@ instance ConvertSuccess Entry HtmlObject where
         , ("date", cs $ formatTime defaultTimeLocale "%B %e, %Y"
                       $ entryDay e)
         , ("month", cs $ formatTime defaultTimeLocale "%B %Y" $ entryDay e)
+        , ("slug", cs $ entrySlug e)
         ]
 
 data Bloggy = Bloggy
