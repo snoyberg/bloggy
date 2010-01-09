@@ -120,6 +120,11 @@ article {
     margin-left: 10px;
 }
 
+#content {
+    display: block;
+    border-bottom: 1px dashed #000;
+}
+
 footer {
     clear: both;
     display: block;
