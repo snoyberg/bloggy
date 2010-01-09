@@ -8,6 +8,11 @@
       <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <link rel="alternate" type="application/atom+xml" href="$bloggy.approot$feed/">
+    <script src="http://cdn.jquerytools.org/1.1.2/full/jquery.tools.min.js"></script>
+    <script>
+        var initialMonth = "$entry.month$";
+    </script>
+    <script src="$bloggy.approot$static/script.js"></script>
   </head>
   <body>
     <section id="wrapper">
@@ -26,7 +31,7 @@
         <h3>Archives</h3>
         <section id="archives">
           $archive:{ month |
-            <h4>$month.display$</h4>
+            <h4><div></div>$month.display$</h4>
             <ul>
               $month.entries:{ entry |
                 <li><a href="$entry.url$">$entry.title$</a></li>

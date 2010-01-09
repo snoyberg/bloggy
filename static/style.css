@@ -32,10 +32,6 @@ nav h3, nav h4 {
     margin: 0;
 }
 
-nav h4 {
-    margin-top: 5px;
-}
-
 nav ul {
     padding-left: 5px;
     font-size: 10pt;
@@ -51,7 +47,46 @@ nav a:hover {
 }
 
 #archives {
-    padding-left: 10px;
+    display: block;
+    margin: 0 5px 5px 5px;
+    border: 1px solid black;
+    border-bottom: 0;
+}
+
+#archives h4 {
+    cursor: pointer;
+    background-color: #999;
+    padding: 2px 4px;
+    border-bottom: 1px solid black;
+    font-size: 16px;
+    line-height: 16px;
+}
+
+#archives h4.current {
+    cursor: default;
+}
+
+#archives h4 div {
+    width: 10px;
+    height: 10px;
+    margin-top: 3px;
+    margin-right: 3px;
+    background: url(plusminus.png) no-repeat top;
+    float: left;
+}
+
+#archives h4.current div {
+    background-position: bottom;
+}
+
+#archives ul {
+    background-color: #ccc;
+    margin: 0;
+    padding: 4px 0 4px 8px;
+    border-bottom: 1px solid black;
+}
+
+#archives a {
     display: block;
 }
 

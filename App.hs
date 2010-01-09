@@ -26,8 +26,9 @@ instance ConvertSuccess Entry HtmlObject where
     convertSuccess e = cs
         [ ("title", cs $ entryTitle e)
         , ("content", entryContent e)
-        , ("date", cs $ formatTime defaultTimeLocale "%b %e, %Y"
+        , ("date", cs $ formatTime defaultTimeLocale "%B %e, %Y"
                       $ entryDay e)
+        , ("month", cs $ formatTime defaultTimeLocale "%B %Y" $ entryDay e)
         ]
 
 data Bloggy = Bloggy
