@@ -10,6 +10,7 @@ import Data.Object.Text
 import Data.Object.String
 import Data.Attempt
 import Types
+import Archive
 import Web.Encodings
 import Data.Time
 import System.Locale
@@ -66,9 +67,6 @@ serveStatic' = serveStatic $ fileLookupDir "static"
 slugToUrl y s =
     let (Approot ar) = approot y
      in ar ++ "entry/" ++ encodeUrl s ++ "/"
-
-loadArchive :: IO Archive
-loadArchive = readYamlDoc archiveFile >>= convertAttemptWrap
 
 showEntry :: Entry -> Handler Bloggy Template
 showEntry e = do
