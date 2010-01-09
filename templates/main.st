@@ -36,6 +36,7 @@
       </nav>
       <article>
         <h1 id="article-title">$entry.title$</h1>
+        <h2 id="article-date">$entry.date$</h2>
         $entry.content$
       </article>
       <footer>

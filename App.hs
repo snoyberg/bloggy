@@ -8,12 +8,15 @@ import Data.Object.Yaml
 import Data.Object.Text
 import Types
 import Web.Encodings
+import Data.Time
+import System.Locale
 
-data Entry = Entry Text Text
+data Entry = Entry Text Text Day
 instance ConvertSuccess Entry HtmlObject where
-    convertSuccess (Entry t c) = cs
+    convertSuccess (Entry t c d) = cs
         [ ("title", Text t)
         , ("content", Html c)
+        , ("date", cs $ formatTime defaultTimeLocale "%b %e, %Y" d)
         ]
 
 data Bloggy = Bloggy
@@ -56,9 +59,10 @@ showEntry e = do
 --readEntry :: MonadIO m => String -> m Entry
 readEntry s = do
     contents <- liftIO $ readFile $ entriesDir ++ s
-    let (t:d:rest) = lines contents
+    let (t:d':rest) = lines contents
     let content = unlines rest
-    return $ Entry (cs t) (cs content)
+    d <- convertAttemptWrap d'
+    return $ Entry (cs t) (cs content) d
 
 showEntryH :: String -> Handler Bloggy Template
 showEntryH eSlug = readEntry eSlug >>= showEntry
