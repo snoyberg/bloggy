@@ -34,32 +34,34 @@ instance ConvertSuccess (SlugToUrl, Archive) HtmlObject where
             [ ("url", stourl $ slug ei)
             , ("title", title ei)
             ]
-instance ConvertSuccess Archive YamlDoc where
-    convertSuccess = cs . Sequence . map helper where
-        helper :: (YearMonth, [EntryInfo]) -> TextObject
-        helper (YearMonth y m, eis) = cs
-            [ ("year", toTextObject $ show y)
-            , ("month", cs $ show m)
-            , ("entries", Sequence $ map helper2 eis)
-            ]
-        helper2 ei = cs
-            [ ("slug", slug ei)
-            , ("title", title ei)
-            ]
-instance ConvertAttempt YamlDoc Archive where
-    convertAttempt yd = do
-        to <- ca yd
-        seq <- fromSequence to
-        mapM helper seq
-          where
-            helper :: TextObject -> Attempt (YearMonth, [EntryInfo])
-            helper to = do
-                ma <- fromMapping to
-                y <- lookupObject "year" ma
-                mo' <- lookupObject "month" ma
-                mo <- SF.read mo'
-                es <- lookupObject "entries" ma
-                return (YearMonth y mo, es)
+
+archiveToTextObject :: Archive -> TextObject
+archiveToTextObject = Sequence . map helper where
+    helper :: (YearMonth, [EntryInfo]) -> TextObject
+    helper (YearMonth y m, eis) = cs
+        [ ("year", toTextObject $ show y)
+        , ("month", cs $ show m)
+        , ("entries", Sequence $ map helper2 eis)
+        ]
+    helper2 ei = cs
+        [ ("slug", slug ei)
+        , ("title", title ei)
+        ]
+
+archiveFromTextObject :: FromAttempt m => TextObject -> m Archive
+archiveFromTextObject to = fa $ do
+    seq <- fromSequence to
+    mapM helper seq
+      where
+        helper :: TextObject -> Attempt (YearMonth, [EntryInfo])
+        helper to = do
+            ma <- fromMapping to
+            y <- lookupObject "year" ma
+            mo' <- lookupObject "month" ma
+            mo <- SF.read mo'
+            es <- lookupObject "entries" ma
+            return (YearMonth y mo, es)
+
 instance ConvertAttempt TextObject [EntryInfo] where
     convertAttempt = mapM helper <=< fromSequence where
         helper to = do

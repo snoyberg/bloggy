@@ -11,22 +11,23 @@ import Data.Function
 import Data.Function.Predicate
 import Control.Exception
 import Prelude hiding (catch)
+import Text.Libyaml (YamlException)
 
 notHidden ('.':_) = False
 notHidden _ = True
 
 loadArchive :: IO Archive
 loadArchive =
-    catch (readYamlDoc archiveFile >>= convertAttemptWrap) loadArchive'
+    catch (decodeFile archiveFile >>= archiveFromTextObject) loadArchive'
 
-loadArchive' :: IOException -> IO Archive
+loadArchive' :: YamlException -> IO Archive
 loadArchive' _ = do
     allContents <- getDirectoryContents entriesDir
     allFiles <- filterM (\e -> doesFileExist $ entriesDir ++ e) allContents
     let files = filter notHidden allFiles
     pairs <- mapM readEntry files
     let archive = map hoist $ groupBy ((==) `on` fst) $ reverse $ map snd $ sort pairs
-    writeYamlDoc archiveFile $ cs archive
+    encodeFile archiveFile $ archiveToTextObject archive
     return archive
 
 readEntry :: FilePath -> IO (Day, (YearMonth, EntryInfo))

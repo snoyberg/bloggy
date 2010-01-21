@@ -39,17 +39,15 @@ data Bloggy = Bloggy
     , blogStatic :: String
     }
 loadBloggy :: IO Bloggy
-loadBloggy = readYamlDoc "settings.yaml" >>= convertAttemptWrap
-instance ConvertAttempt YamlDoc Bloggy where
-    convertAttempt = helper <=< ca where
-        helper :: StringObject -> Attempt Bloggy
-        helper so = do
-            m <- fromMapping so
-            t <- lookupObject "title" m
-            s <- lookupObject "subtitle" m
-            a <- lookupObject "approot" m
-            st <- lookupObject "static" m
-            return $ Bloggy t s a st
+loadBloggy = decodeFile "settings.yaml" >>= fa . helper where
+    helper :: StringObject -> Attempt Bloggy
+    helper so = do
+        m <- fromMapping so
+        t <- lookupObject "title" m
+        s <- lookupObject "subtitle" m
+        a <- lookupObject "approot" m
+        st <- lookupObject "static" m
+        return $ Bloggy t s a st
 
 instance Yesod Bloggy where
     handlers = [$resources|
