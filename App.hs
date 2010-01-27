@@ -37,20 +37,25 @@ data Bloggy = Bloggy
     , blogSubtitle :: String
     , blogApproot :: String
     , blogStatic :: String
+    , blogTG :: TemplateGroup
     }
 loadBloggy :: IO Bloggy
-loadBloggy = decodeFile "settings.yaml" >>= fa . helper where
-    helper :: StringObject -> Attempt Bloggy
-    helper so = do
-        m <- fromMapping so
-        t <- lookupObject "title" m
-        s <- lookupObject "subtitle" m
-        a <- lookupObject "approot" m
-        st <- lookupObject "static" m
-        return $ Bloggy t s a st
+loadBloggy = do
+    so <- decodeFile "settings.yaml"
+    tg <- loadTemplateGroup "templates"
+    fa $ helper so tg
+      where
+        helper :: StringObject -> TemplateGroup -> Attempt Bloggy
+        helper so tg = do
+            m <- fromMapping so
+            t <- lookupObject "title" m
+            s <- lookupObject "subtitle" m
+            a <- lookupObject "approot" m
+            st <- lookupObject "static" m
+            return $ Bloggy t s a st tg
 
 instance Yesod Bloggy where
-    handlers = [$resources|
+    resources = [$mkResources|
 /:
     Get: mostRecentEntryH
 /entry/$entry:
@@ -59,30 +64,29 @@ instance Yesod Bloggy where
     Get: showFeedH
 /static/*filepath: serveStatic'
 |]
-    templateDir _ = "templates"
 instance YesodApproot Bloggy where
-    approot = Approot . blogApproot
+    approot = blogApproot
+instance YesodTemplate Bloggy where
+    getTemplateGroup = blogTG
 
 serveStatic' :: Verb -> [String] -> Handler y [(ContentType, Content)]
 serveStatic' = serveStatic $ fileLookupDir "static"
 
-slugToUrl y s =
-    let (Approot ar) = approot y
-     in ar ++ "entry/" ++ encodeUrl s ++ "/"
+slugToUrl y s = approot y ++ "entry/" ++ encodeUrl s ++ "/"
 
-showEntry :: Entry -> Handler Bloggy Template
+showEntry :: Entry -> Handler Bloggy ChooseRep
 showEntry e = do
     y <- getYesod
-    template "main" "entry" (cs e) $ do
+    template "main" (cs e) $ \ho t -> do
         archive <- loadArchive
-        return
-            [ ("bloggy", cs y)
-            , ("archive", cs (slugToUrl y, archive))
-            ]
+        return $ setAttribute "bloggy" (toHtmlObject y)
+               $ setAttribute "archive" (toHtmlObject (slugToUrl y, archive))
+               $ setAttribute "entry" (toHtmlObject e)
+                 t
 
 instance ConvertSuccess Bloggy HtmlObject where
     convertSuccess b = cs
-        [ ("approot", unApproot $ approot b)
+        [ ("approot", approot b)
         , ("title", blogTitle b)
         , ("subtitle", blogSubtitle b)
         , ("static", blogStatic b)
@@ -96,7 +100,7 @@ readEntry s = do
     d <- convertAttemptWrap d'
     return $ Entry (cs t) (Html $ cs content) s d
 
-showEntryH :: String -> Handler Bloggy Template
+showEntryH :: String -> Handler Bloggy ChooseRep
 showEntryH eSlug = readEntry eSlug >>= showEntry
 
 mostRecentEntryH = do
@@ -126,4 +130,4 @@ instance ConvertSuccess Day UTCTime where
     convertSuccess d = UTCTime d $ secondsToDiffTime 0
 
 main :: IO ()
-main = putStrLn "Running..." >> loadBloggy >>= run 3000 . toHackApp
+main = putStrLn "Running..." >> loadBloggy >>= toHackApp >>= run 3000
