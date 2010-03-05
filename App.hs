@@ -4,7 +4,7 @@
 import Yesod
 import Yesod.Helpers.Static
 import Yesod.Helpers.AtomFeed
-import Hack.Handler.SimpleServer
+import Network.Wai.Handler.SimpleServer
 import Data.Object.Yaml
 import Data.Object.Text
 import Data.Object.String
@@ -15,6 +15,7 @@ import Web.Encodings
 import Data.Time
 import System.Locale
 import Control.Monad
+import Network.Wai (Method (..))
 
 data Entry = Entry
     { entryTitle :: String
@@ -57,31 +58,32 @@ loadBloggy = do
 instance Yesod Bloggy where
     resources = [$mkResources|
 /:
-    Get: mostRecentEntryH
+    GET: mostRecentEntryH
 /entry/$entry:
-    Get: showEntryH
+    GET: showEntryH
 /feed:
-    Get: showFeedH
+    GET: showFeedH
 /static/*filepath: serveStatic'
 |]
 instance YesodApproot Bloggy where
     approot = blogApproot
 instance YesodTemplate Bloggy where
     getTemplateGroup = blogTG
+    defaultTemplateAttribs _ _ = return
 
-serveStatic' :: Verb -> [String] -> Handler y [(ContentType, Content)]
+serveStatic' :: Method -> [String] -> Handler y [(ContentType, Content)]
 serveStatic' = serveStatic $ fileLookupDir "static"
 
 slugToUrl y s = approot y ++ "entry/" ++ encodeUrl s ++ "/"
 
-showEntry :: Entry -> Handler Bloggy ChooseRep
+showEntry :: Entry -> Handler Bloggy RepHtmlJson
 showEntry e = do
     y <- getYesod
-    template "main" (cs e) $ \ho t -> do
+    templateHtmlJson "main" (cs e) $ \ho t -> do
         archive <- loadArchive
-        return $ setAttribute "bloggy" (toHtmlObject y)
-               $ setAttribute "archive" (toHtmlObject (slugToUrl y, archive))
-               $ setAttribute "entry" (toHtmlObject e)
+        return $ setHtmlAttrib "bloggy" y
+               $ setHtmlAttrib "archive" (slugToUrl y, archive)
+               $ setHtmlAttrib "entry" e
                  t
 
 instance ConvertSuccess Bloggy HtmlObject where
@@ -100,8 +102,8 @@ readEntry s = do
     d <- convertAttemptWrap d'
     return $ Entry (cs t) (Html $ cs content) s d
 
-showEntryH :: String -> Handler Bloggy ChooseRep
-showEntryH eSlug = readEntry eSlug >>= showEntry
+showEntryH :: String -> Handler Bloggy RepHtmlJson
+showEntryH eSlug = liftIO (readEntry eSlug) >>= showEntry
 
 mostRecentEntryH = do
     ((_, (ei:_)):_) <- liftIO loadArchive
@@ -130,4 +132,4 @@ instance ConvertSuccess Day UTCTime where
     convertSuccess d = UTCTime d $ secondsToDiffTime 0
 
 main :: IO ()
-main = putStrLn "Running..." >> loadBloggy >>= toHackApp >>= run 3000
+main = putStrLn "Running..." >> loadBloggy >>= toWaiApp >>= run 3000
