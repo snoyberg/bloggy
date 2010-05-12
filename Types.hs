@@ -3,9 +3,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
-import Data.Object.Html
 import Data.Object.Yaml
-import Data.Object.Text
+import Data.Object
 import Data.Attempt
 import Control.Monad
 import qualified Safe.Failure as SF

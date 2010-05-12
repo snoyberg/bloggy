@@ -2,7 +2,6 @@ module Archive (loadArchive) where
 
 import System.Directory
 import Types
-import Data.Object.Html
 import Data.Object.Yaml
 import Data.List
 import Data.Time

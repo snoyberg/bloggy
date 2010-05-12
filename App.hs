@@ -6,8 +6,7 @@ import Yesod.Helpers.Static
 import Yesod.Helpers.AtomFeed
 import Network.Wai.Handler.SimpleServer
 import Data.Object.Yaml
-import Data.Object.Text
-import Data.Object.String
+import Data.Object
 import Data.Attempt
 import Types
 import Archive
@@ -15,7 +14,6 @@ import Web.Encodings
 import Data.Time
 import System.Locale
 import Control.Monad
-import Network.Wai (Method (..))
 
 data Entry = Entry
     { entryTitle :: String
