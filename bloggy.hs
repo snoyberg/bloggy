@@ -3,6 +3,9 @@ import Yesod
 import Yesod.Helpers.AtomFeed
 import Yesod.Helpers.Static
 import Model
+import Data.Object
+import Data.Object.Yaml
+import Control.Monad
 
 -- | Normally we would want to load up entries in this, but I want it to run
 -- best on CGI.
@@ -14,12 +17,18 @@ data Bloggy = Bloggy
     }
 
 loadBloggy :: IO Bloggy
-loadBloggy = return Bloggy
-    { bloggyStatic = fileLookupDir "static"
-    , bloggyApproot = "" -- FIXME
-    , bloggyTitle = "FIXME bloggy title"
-    , bloggySubtitle = "FIXME bloggy subtitle"
-    }
+loadBloggy = do
+    so <- join $ decodeFile "settings.yaml"
+    m <- fromMapping so :: IO [(String, StringObject)]
+    ar <- lookupScalar "approot" m :: IO String
+    title <- lookupScalar "title" m
+    subtitle <- lookupScalar "subtitle" m
+    return Bloggy
+        { bloggyStatic = fileLookupDir "static"
+        , bloggyApproot = ar
+        , bloggyTitle = title
+        , bloggySubtitle = subtitle
+        }
 
 mkYesod "Bloggy" [$parseRoutes|
 /                  MostRecentEntryR         GET
