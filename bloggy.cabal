@@ -51,11 +51,16 @@ Cabal-version:       >=1.2
 
 Executable bloggy
   -- .hs or .lhs file containing the Main module.
-  Main-is:             App.hs
+  Main-is:             bloggy.hs
   
   -- Packages needed in order to build this package.
   Build-depends:       base >= 4 && < 5,
-                       yesod >= 0.2.0 && < 0.3
+                       yesod >= 0.2.0 && < 0.3,
+                       data-object >= 0.3.1 && < 0.4,
+                       data-object-yaml >= 0.3.0 && < 0.4,
+                       cereal >= 0.2 && < 0.3,
+                       directory >= 1 && < 1.1,
+                       bytestring >= 0.9 && < 0.10
   
   -- Modules not exported by this package.
   -- Other-modules:       

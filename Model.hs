@@ -1,15 +1,33 @@
 module Model where
 
 import Yesod
+import qualified Data.ByteString as S
+import System.Directory
+import System.IO
+import Data.Serialize
+import Control.Arrow
+import Data.List
+import Data.Function
+import Control.Monad
+import Control.Applicative
 
 loadEntry :: String -> IO (Maybe Entry)
-loadEntry "foo" = return $ Just Entry
-    { entrySlug = "foo"
-    , entryTitle = "bar"
-    , entryDate = "January 12, 2010"
-    , entryContent = cs "It's my birthday!"
-    }
-loadEntry _ = return Nothing -- FIXME
+loadEntry slug = do
+    let fp = "entries/" ++ slug
+    exists <- doesFileExist fp
+    if exists
+        then do
+            withFile fp ReadMode $ \h -> do
+                title <- S.hGetLine h
+                date <- S.hGetLine h
+                contents <- S.hGetContents h
+                return $ Just Entry
+                    { entrySlug = slug
+                    , entryTitle = cs title
+                    , entryDate = cs date
+                    , entryContent = Encoded $ cs contents
+                    }
+        else return Nothing
 
 data Entry = Entry
     { entrySlug :: String
@@ -18,12 +36,52 @@ data Entry = Entry
     , entryContent :: HtmlContent
     }
 
-type YearMonth = String
+loadArchive :: IO Archive
+loadArchive = do
+    let fp = "archive.dat"
+    exists <- doesFileExist fp
+    ar <- if exists
+            then do
+                s <- S.readFile fp
+                case decode s of
+                    Left _ -> return Nothing
+                    Right x -> return $ Just x
+            else return Nothing
+    case ar of
+        Just x -> return x
+        Nothing -> do
+            x <- loadArchive'
+            S.writeFile fp $ encode x
+            return x
 
-loadArchive :: IO [(YearMonth, [EntryInfo])] -- FIXME use an enumerator
-loadArchive = return [("January 2010", [EntryInfo "foo" "bar"])] -- FIXME
+loadArchive' :: IO Archive
+loadArchive' = do
+    let top = "entries/"
+    allContents <- getDirectoryContents top
+    allFiles <- filterM (\f -> doesFileExist $ top ++ f) allContents
+    pairs <- mapM (go top) allFiles
+    return $ map (fst . head &&& map snd)
+           $ groupBy ((==) `on` fst)
+           $ map (first toYearMonth)
+           $ reverse
+           $ sortBy (compare `on` fst)
+             pairs
+  where
+    go top f = do
+        withFile (top ++ f) ReadMode $ \h -> do
+            title <- S.hGetLine h
+            date <- S.hGetLine h
+            return (cs date, EntryInfo f $ cs title)
+    toYearMonth = take 7
 
 data EntryInfo = EntryInfo
     { eiSlug :: String
     , eiTitle :: String
     }
+instance Serialize EntryInfo where
+    put (EntryInfo a b) = put a >> put b
+    get = EntryInfo <$> get <*> get
+
+type YearMonth = String
+
+type Archive = [(YearMonth, [EntryInfo])]
