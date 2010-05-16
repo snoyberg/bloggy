@@ -1,0 +1,5 @@
+*.swp
+archive.dat
+client_session_key.aes
+/dist/
+entries
