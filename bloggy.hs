@@ -107,7 +107,25 @@ getEntryR slug = do
     github = "http://github.com/snoyberg"
 
 getFeedR :: Handler Bloggy RepAtom
-getFeedR = error "FIXME"
+getFeedR = do
+    archive <- liftIO loadArchive
+    b <- getYesod
+    let archive' = take 5 $ concatMap snd archive
+    entries <- liftIO $ catMaybes <$> mapM (loadEntry . eiSlug) archive'
+    atomFeed $ AtomFeed
+        { atomTitle = bloggyTitle b
+        , atomLinkSelf = FeedR
+        , atomLinkHome = MostRecentEntryR
+        , atomUpdated = UTCTime (entryDate $ head entries) 0
+        , atomEntries = map go entries
+        }
+  where
+    go e = AtomFeedEntry
+                { atomEntryLink = EntryR $ entrySlug e
+                , atomEntryUpdated = UTCTime (entryDate e) 0
+                , atomEntryTitle = entryTitle e
+                , atomEntryContent = entryContent e
+                }
 
 main :: IO ()
 main = loadBloggy >>= toWaiApp >>= basicHandler 3000
