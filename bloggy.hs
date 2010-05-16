@@ -6,6 +6,9 @@ import Model
 import Data.Object
 import Data.Object.Yaml
 import Control.Monad
+import Data.Time
+import Data.Maybe
+import Control.Applicative
 
 -- | Normally we would want to load up entries in this, but I want it to run
 -- best on CGI.
@@ -86,7 +89,7 @@ getEntryR slug = do
                                     $cs.eiTitle.entry$
             %article
                 %h1#article-title $cs.entryTitle.entry$
-                %h2#article-date $cs.entryDate.entry$
+                %h2#article-date $cs.showDay.entryDate.entry$
                 %section#content
                     $entryContent.entry$
                 <div id="disqus_thread"></div><script type="text/javascript" src="http://disqus.com/forums/snoyblog/embed.js"></script><noscript><a href="http://disqus.com/forums/snoyblog/?url=ref">View the discussion thread.</a></noscript><a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>

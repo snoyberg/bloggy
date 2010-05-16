@@ -10,6 +10,8 @@ import Data.List
 import Data.Function
 import Control.Monad
 import Control.Applicative
+import Data.Time
+import System.Locale
 
 loadEntry :: String -> IO (Maybe Entry)
 loadEntry slug = do
@@ -24,7 +26,7 @@ loadEntry slug = do
                 return $ Just Entry
                     { entrySlug = slug
                     , entryTitle = cs title
-                    , entryDate = cs date
+                    , entryDate = read $ cs date
                     , entryContent = Encoded $ cs contents
                     }
         else return Nothing
@@ -32,7 +34,7 @@ loadEntry slug = do
 data Entry = Entry
     { entrySlug :: String
     , entryTitle :: String
-    , entryDate :: String
+    , entryDate :: Day
     , entryContent :: HtmlContent
     }
 
@@ -71,8 +73,8 @@ loadArchive' = do
         withFile (top ++ f) ReadMode $ \h -> do
             title <- S.hGetLine h
             date <- S.hGetLine h
-            return (cs date, EntryInfo f $ cs title)
-    toYearMonth = take 7
+            return (read $ cs date :: Day, EntryInfo f $ cs title)
+    toYearMonth = formatTime defaultTimeLocale "%B %Y"
 
 data EntryInfo = EntryInfo
     { eiSlug :: String
@@ -85,3 +87,6 @@ instance Serialize EntryInfo where
 type YearMonth = String
 
 type Archive = [(YearMonth, [EntryInfo])]
+
+showDay :: Day -> String
+showDay = formatTime defaultTimeLocale "%B %d, %Y"
