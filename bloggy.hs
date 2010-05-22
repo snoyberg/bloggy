@@ -16,7 +16,6 @@ data Bloggy = Bloggy
     { bloggyStatic :: Static
     , bloggyApproot :: String
     , bloggyTitle :: String
-    , bloggySubtitle :: String
     }
 
 loadBloggy :: IO Bloggy
@@ -25,17 +24,15 @@ loadBloggy = do
     m <- fromMapping so :: IO [(String, StringObject)]
     ar <- lookupScalar "approot" m :: IO String
     title <- lookupScalar "title" m
-    subtitle <- lookupScalar "subtitle" m
     return Bloggy
         { bloggyStatic = fileLookupDir "static"
         , bloggyApproot = ar
         , bloggyTitle = title
-        , bloggySubtitle = subtitle
         }
 
 mkYesod "Bloggy" [$parseRoutes|
 /                  MostRecentEntryR         GET
-/entry/$slug       EntryR                   GET
+/entry/#String     EntryR                   GET
 /feed              FeedR                    GET
 /static            StaticR                  Static siteStatic bloggyStatic
 |]
@@ -60,51 +57,58 @@ getEntryR slug = do
         %meta!charset=utf-8
         %title $cs.entryTitle.entry$ :: $cs.bloggyTitle.bloggy$
         %link!rel=stylesheet!href=@stylesheet@
-        <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
         %link!rel=alternate!type=application/atom+xml!href=@FeedR@
-        %script!src=$cs.jquerytools$
-        %script!src=@script@
+        <link href='http://fonts.googleapis.com/css?family=Cardo' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+        <script src="http://view.jquery.com/trunk/plugins/treeview/lib/jquery.cookie.js"></script>
+        <script src="http://view.jquery.com/trunk/plugins/treeview/jquery.treeview.js"</script>
+        %script
+            var currentSlug = "$cs.slug$";
+            $$(function(){$$("#archives").treeview({persist:"location",collapsed:true,unique:true})});
     %body
-        %section#wrapper
-            %header
-                %h1 $cs.bloggyTitle.bloggy$
-                %h2 $cs.bloggySubtitle.bloggy$
-            %nav
-                %h3 Blogroot
-                %ul
+        %h1 $cs.bloggyTitle.bloggy$
+        #wrapper
+            #nav
+                %h2 Blogroll
+                %ul#blogroll
                     %li
                         %a!href=$cs.yesodweb$ Yesod Web Framework
                     %li
                         %a!href=$cs.photos$ Family Photo Gallery
                     %li
                         %a!href=$cs.github$ Projects on Github
-                %h3 Archives
-                %section#archives
-                $forall archive month
-                    %h4 $cs.fst.month$
-                    %ul
-                        $forall snd.month entry
-                            %li
-                                %a!href=@EntryR.eiSlug.entry@
-                                    $cs.eiTitle.entry$
-            %article
-                %h1#article-title $cs.entryTitle.entry$
-                %h2#article-date $cs.showDay.entryDate.entry$
-                %section#content
+                    %li
+                        %a!href=$cs.twitter$ Follow me
+                %h2 Archives
+                %ul#archives
+                    $forall archive month
+                        %li
+                            $cs.fst.month$
+                            %ul
+                                $forall snd.month entry
+                                    %li
+                                        %a!href=@EntryR.eiSlug.entry@
+                                            $cs.eiTitle.entry$
+            #content
+                %h2 $cs.entryTitle.entry$ &mdash; $cs.showDay.entryDate.entry$
+                #main-content
                     $entryContent.entry$
                 <div id="disqus_thread"></div><script type="text/javascript" src="http://disqus.com/forums/snoyblog/embed.js"></script><noscript><a href="http://disqus.com/forums/snoyblog/?url=ref">View the discussion thread.</a></noscript><a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
-            %footer
+            .weight
+        #footer
+            %p
                 Powered by 
                 %a!href=$cs.yesodweb$ Yesod Web Framework
         <script type="text/javascript">(function() {var links = document.getElementsByTagName('a');var query = '?';for(var i = 0; i < links.length; i++) {if(links[i].href.indexOf('#disqus_thread') >= 0) { query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&'; } } document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/snoyblog/get_num_replies.js' + query + '"></' + 'script>'); })(); </script>
 |]
   where
     stylesheet = StaticR $ StaticRoute ["style.css"]
-    script = StaticR $ StaticRoute ["script.js"]
     jquerytools = "http://cdn.jquerytools.org/1.1.2/full/jquery.tools.min.js"
     yesodweb = "http://docs.yesodweb.com/"
     photos = "http://www.snoyman.com/photos/"
     github = "http://github.com/snoyberg"
+    twitter = "http://twitter.com/snoyberg"
 
 getFeedR :: Handler Bloggy RepAtom
 getFeedR = do
