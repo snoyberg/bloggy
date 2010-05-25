@@ -101,9 +101,10 @@ getEntryR slug = do
                 Powered by 
                 %a!href=$cs.yesodweb$ Yesod Web Framework
         <script type="text/javascript">(function() {var links = document.getElementsByTagName('a');var query = '?';for(var i = 0; i < links.length; i++) {if(links[i].href.indexOf('#disqus_thread') >= 0) { query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&'; } } document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/snoyblog/get_num_replies.js' + query + '"></' + 'script>'); })(); </script>
+        <script type="text/javascript">var _gaq = _gaq || [];_gaq.push(['_setAccount', 'UA-UA-1434510-6']);_gaq.push(['_trackPageview']);(function() {var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);})();</script>
 |]
   where
-    stylesheet = StaticR $ StaticRoute ["style.css"]
+    stylesheet = StaticR $ StaticRoute ["styl.css"]
     jquerytools = "http://cdn.jquerytools.org/1.1.2/full/jquery.tools.min.js"
     yesodweb = "http://docs.yesodweb.com/"
     photos = "http://www.snoyman.com/photos/"
